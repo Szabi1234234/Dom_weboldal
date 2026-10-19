@@ -4,86 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="memoria.css">
-    <title>Memóriajáték</title>
+    <title>Motorhang memória</title>
 </head>
 <body>
     <script>
-        // ====== BEÁLLÍTÁSOK ======
-        // IDE írd be a képeid elérési útját (8 db kell, mindegyikből 2 kártya lesz).
-        // Tedd a képeket a "kepek" mappába. Amíg nincs meg a kép, "KÉP 1", "KÉP 2"... felirat látszik.
-        const KEPEK = [
-            "kepek/1.jpg",
-            "kepek/2.jpg",
-            "kepek/3.jpg",
-            "kepek/4.jpg",
-            "kepek/5.jpg",
-            "kepek/6.jpg",
-            "kepek/7.jpg",
-            "kepek/8.jpg"
+        // ====== ADATOK ======
+        
+        const ADATOK = [
+            { nev: "VW Golf GTI",           kep: "images/golf_gti.jpg",   hang: "images/golf_gti.mp3" },
+            { nev: "VW Passat 1.9 TDI",     kep: "images/passat_tdi.jpg", hang: "images/passat_tdi.mp3" },
+            { nev: "Lada Niva",             kep: "images/lada_niva.jpg",  hang: "images/lada_niva.mp3" },
+            { nev: "Mercedes W123 Diesel",  kep: "images/w123.jpg",       hang: "images/w123.mp3" },
+            { nev: "Ford Transit 2.5D",     kep: "images/transit.jpg",    hang: "images/transit.mp3" },
+            { nev: "Trabant 601",           kep: "images/trabant.jpg",    hang: "images/trabant.mp3" },
+            { nev: "Fiat Panda 750",        kep: "images/panda.jpg",      hang: "images/panda.mp3" },
+            { nev: "Dodge Ram 5.9 Cummins", kep: "images/dodge_ram.jpg",  hang: "images/dodge_ram.mp3" }
         ];
 
         const OSZLOP = 4;
-        const SOR = (KEPEK.length * 2) / OSZLOP;
 
         // ====== ÁLLAPOT ======
-        let kartyak = [];      // a kártyák "tartalma" (képek sorszáma, összekeverve)
-        let elso = null;       // az első felfordított kártya (div)
-        let masodik = null;    // a második felfordított kártya (div)
-        let zarolva = false;   // amíg két kártya látszik, nem lehet kattintani
+        let nehez = false;     
+        let kartyak = [];      
+        let elso = null;       
+        let masodik = null;    
+        let zarolva = false;   
         let talalatok = 0;
         let lepesek = 0;
+        let jatekSzam = 0;     
+
+        
+        const hangok = [];
+        for (let i = 0; i < ADATOK.length; i++) {
+            const hang = new Audio(ADATOK[i].hang);
+            hang.preload = "auto";
+            hangok.push(hang);
+        }
+        let jelenlegiHang = null; 
 
         // ====== OLDAL FELÉPÍTÉSE ======
         const cim = document.createElement("h1");
-        cim.textContent = "Memóriajáték";
+        cim.textContent = "Motorhang memória";
         document.body.appendChild(cim);
+
+        const leirasSor = document.createElement("p");
+        leirasSor.textContent = "Párosítsd az autót a motorhanggal!";
+        document.body.appendChild(leirasSor);
+
+        
+        const modSor = document.createElement("div");
+        modSor.id = "modok";
+        document.body.appendChild(modSor);
+
+        const konnyuGomb = document.createElement("button");
+        konnyuGomb.textContent = "Könnyű mód";
+        konnyuGomb.setAttribute("onclick", "modValtas(false)");
+        modSor.appendChild(konnyuGomb);
+
+        const nehezGomb = document.createElement("button");
+        nehezGomb.textContent = "Nehéz mód";
+        nehezGomb.setAttribute("onclick", "modValtas(true)");
+        modSor.appendChild(nehezGomb);
 
         const szamlalo = document.createElement("p");
         szamlalo.id = "szamlalo";
-        szamlalo.textContent = "Lépések: 0";
         document.body.appendChild(szamlalo);
 
         const alap = document.createElement("div");
         alap.id = "alap";
-        alap.style.gridTemplateColumns = "repeat(" + OSZLOP + ", 100px)";
+        alap.style.gridTemplateColumns = "repeat(" + OSZLOP + ", 130px)";
         document.body.appendChild(alap);
 
         const ujra = document.createElement("button");
         ujra.id = "ujra";
         ujra.textContent = "Újrakezdés";
-        ujra.setAttribute("onclick", "window.location.reload()");
+        ujra.setAttribute("onclick", "ujJatek()");
         document.body.appendChild(ujra);
-
-        // kártyák listája: minden sorszám kétszer, majd keverés
-        for (let i = 0; i < KEPEK.length; i++) {
-            kartyak.push(i);
-            kartyak.push(i);
-        }
-        keveres(kartyak);
-
-        // kártyák legyártása ciklussal
-        for (let i = 0; i < kartyak.length; i++) {
-            const cella = document.createElement("div");
-            cella.className = "kartya";
-            cella.id = "k" + i;
-            cella.setAttribute("onclick", "lepes(this)");
-
-            const kep = document.createElement("img");
-            kep.src = KEPEK[kartyak[i]];
-            kep.alt = "KÉP " + (kartyak[i] + 1);
-            // ha nincs meg a kép, szöveg jelenik meg helyette
-            kep.onerror = function () {
-                kep.remove();
-                tartalom.textContent = "KÉP " + (kartyak[i] + 1);
-            };
-
-            const tartalom = document.createElement("div");
-            tartalom.className = "tartalom";
-            tartalom.appendChild(kep);
-
-            cella.appendChild(tartalom);
-            alap.appendChild(cella);
-        }
 
         // ====== FÜGGVÉNYEK ======
         function keveres(tomb) {
@@ -95,11 +91,111 @@
             }
         }
 
+        function hangLeallitas() {
+            if (jelenlegiHang !== null) {
+                jelenlegiHang.pause();
+                jelenlegiHang.currentTime = 0;
+                jelenlegiHang = null;
+            }
+        }
+
+        function hangLejatszas(par) {
+            const hang = hangok[par];
+
+            
+            if (jelenlegiHang === hang && !hang.paused && !hang.ended) {
+                return;
+            }
+
+            
+            hangLeallitas();
+            jelenlegiHang = hang;
+            hang.currentTime = 0;
+            
+            hang.play().catch(() => {});
+        }
+
+        function modValtas(ujNehez) {
+            nehez = ujNehez;
+            ujJatek();
+        }
+
+        function ujJatek() {
+            jatekSzam++;
+            hangLeallitas();
+
+            
+            kartyak = [];
+            elso = null;
+            masodik = null;
+            zarolva = false;
+            talalatok = 0;
+            lepesek = 0;
+            szamlalo.textContent = "Lépések: 0";
+            alap.innerHTML = "";
+
+            
+            konnyuGomb.className = nehez ? "" : "aktiv";
+            nehezGomb.className = nehez ? "aktiv" : "";
+
+            
+            for (let i = 0; i < ADATOK.length; i++) {
+                kartyak.push({ par: i, tipus: "auto" });
+                kartyak.push({ par: i, tipus: "hang" });
+            }
+            keveres(kartyak);
+
+            
+            for (let i = 0; i < kartyak.length; i++) {
+                const adat = ADATOK[kartyak[i].par];
+
+                const cella = document.createElement("div");
+                cella.className = "kartya";
+                cella.id = "k" + i;
+                cella.setAttribute("onclick", "lepes(this)");
+
+                const tartalom = document.createElement("div");
+                tartalom.className = "tartalom";
+
+                if (kartyak[i].tipus === "auto") {
+                    const kep = document.createElement("img");
+                    kep.src = adat.kep;
+                    kep.alt = adat.nev;
+                    
+                    kep.onerror = function () {
+                        kep.remove();
+                    };
+                    tartalom.appendChild(kep);
+
+                    const felirat = document.createElement("div");
+                    felirat.className = "felirat";
+                    felirat.textContent = adat.nev;
+                    tartalom.appendChild(felirat);
+                } else {
+                    
+                    const ikon = document.createElement("div");
+                    ikon.className = "hang-ikon";
+                    ikon.textContent = "🔊";
+                    tartalom.classList.add("hang");
+                    tartalom.appendChild(ikon);
+                }
+
+                cella.appendChild(tartalom);
+                alap.appendChild(cella);
+            }
+        }
+
         function lepes(melyik) {
             if (zarolva) return;
-            if (melyik.classList.contains("fent")) return;   // már fel van fordítva / megtalált
+            if (melyik.classList.contains("fent")) return;   
 
+            const index = parseInt(melyik.id.substring(1));
             melyik.classList.add("fent");
+
+            
+            if (!(nehez && kartyak[index].tipus === "auto")) {
+                hangLejatszas(kartyak[index].par);
+            }
 
             if (elso === null) {
                 elso = melyik;
@@ -113,31 +209,37 @@
             const index1 = parseInt(elso.id.substring(1));
             const index2 = parseInt(masodik.id.substring(1));
 
-            if (kartyak[index1] === kartyak[index2]) {
-                // találat
+            if (kartyak[index1].par === kartyak[index2].par) {
+                
+                hangLejatszas(kartyak[index2].par);
                 elso.classList.add("talalt");
                 masodik.classList.add("talalt");
                 elso = null;
                 masodik = null;
                 talalatok++;
 
-                if (talalatok === KEPEK.length) {
+                if (talalatok === ADATOK.length) {
                     setTimeout(() => {
                         window.alert("Nyertél! Lépések: " + lepesek);
                     }, 300);
                 }
             } else {
-                // nem egyezik: rövid várakozás, aztán visszafordul
+                
                 zarolva = true;
+                const aktualis = jatekSzam;
                 setTimeout(() => {
+                    if (aktualis !== jatekSzam) return;   
                     elso.classList.remove("fent");
                     masodik.classList.remove("fent");
                     elso = null;
                     masodik = null;
                     zarolva = false;
-                }, 800);
+                }, 1200);
             }
         }
+
+        
+        ujJatek();
     </script>
 </body>
 </html>
