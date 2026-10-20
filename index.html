@@ -11,16 +11,15 @@
         // ====== ADATOK ======
         
         const ADATOK = [
-            { nev: "VW Golf GTI",           kep: "images/golf_gti.jpg",   hang: "images/golf_gti.mp3" },
-            { nev: "VW Passat 1.9 TDI",     kep: "images/passat_tdi.jpg", hang: "images/passat_tdi.mp3" },
-            { nev: "Lada Niva",             kep: "images/lada_niva.jpg",  hang: "images/lada_niva.mp3" },
-            { nev: "Mercedes W123 Diesel",  kep: "images/w123.jpg",       hang: "images/w123.mp3" },
-            { nev: "Ford Transit 2.5D",     kep: "images/transit.jpg",    hang: "images/transit.mp3" },
-            { nev: "Trabant 601",           kep: "images/trabant.jpg",    hang: "images/trabant.mp3" },
-            { nev: "Fiat Panda 750",        kep: "images/panda.jpg",      hang: "images/panda.mp3" },
-            { nev: "Dodge Ram 5.9 Cummins", kep: "images/dodge_ram.jpg",  hang: "images/dodge_ram.mp3" }
-        ];
-
+    { nev: "VW Golf GTI",           kep: "images/golf_gti.jpg",   hang: "images/golf_gti.mp3",   motor: "images/golf_gti_motor.jpg" },
+    { nev: "VW Passat 1.9 TDI",     kep: "images/passat_tdi.jpg", hang: "images/passat_tdi.mp3", motor: "images/passat_tdi_motor.jpg" },
+    { nev: "Lada Niva",             kep: "images/lada_niva.jpg",  hang: "images/lada_niva.mp3",  motor: "images/lada_niva_motor.jpg" },
+    { nev: "Mercedes W123 Diesel",  kep: "images/w123.jpg",       hang: "images/w123.mp3",       motor: "images/w123_motor.jpg" },
+    { nev: "Ford Transit 2.5D",     kep: "images/transit.jpg",    hang: "images/transit.mp3",    motor: "images/transit_motor.jpg" },
+    { nev: "Trabant 601",           kep: "images/trabant.jpg",    hang: "images/trabant.mp3",    motor: "images/trabant_motor.jpg" },
+    { nev: "Fiat Panda 750",        kep: "images/panda.jpg",      hang: "images/panda.mp3",      motor: "images/panda_motor.jpg" },
+    { nev: "Dodge Ram 5.9 Cummins", kep: "images/dodge_ram.jpg",  hang: "images/dodge_ram.mp3",  motor: "images/dodge_ram_motor.jpg" }
+];
         const OSZLOP = 4;
 
         // ====== ÁLLAPOT ======
@@ -172,13 +171,21 @@
                     felirat.textContent = adat.nev;
                     tartalom.appendChild(felirat);
                 } else {
-                    
-                    const ikon = document.createElement("div");
-                    ikon.className = "hang-ikon";
-                    ikon.textContent = "🔊";
+                    // hangkártya: a motor képe (ha nincs meg a kép, a 🔊 ikon marad)
                     tartalom.classList.add("hang");
-                    tartalom.appendChild(ikon);
-                }
+
+                    const motorKep = document.createElement("img");
+                    motorKep.src = adat.motor;
+                    motorKep.alt = "Motor";
+                    motorKep.onerror = function () {
+                        motorKep.remove();
+                        const ikon = document.createElement("div");
+                        ikon.className = "hang-ikon";
+                        ikon.textContent = "🔊";
+                        tartalom.appendChild(ikon);
+                    };
+                    tartalom.appendChild(motorKep);
+}
 
                 cella.appendChild(tartalom);
                 alap.appendChild(cella);

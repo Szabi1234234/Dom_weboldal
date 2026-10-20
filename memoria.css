@@ -162,3 +162,7 @@ button.aktiv {
 .kartya:not(.fent):hover {
     background: rgba(255, 255, 255, 0.25);
 }
+
+.tartalom.hang img {
+    object-fit: contain;
+}
